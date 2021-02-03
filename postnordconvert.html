@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+		<script src='data/postnord.js'></script>	
+
+	<script>	
+		
+var postnummer=["3506","Værløse","DK",
+								"43349","Furulund","SE",
+								"1423","København","DK",
+								"19572","Rosersberg","SE",
+								"50464","Borås","SE",
+								"NG174PA","Ashfield","UK",
+								"55-040","Bielany Wrocławskie","PL",
+								"43232","Varberg","SE",
+								"60238","Norrköping","SE",
+								"7495","Rheinberg","DE",
+								"RM187AN","Tilbury","UK",
+								"BL51BT","Bolton","UK",
+								"DE742BB","Kegworth","UK",
+								"WS151LX","Rugeley","UK",
+								"72-001","Kolbaskowo","PL",
+								"35274","Växjö","SE",
+								"79385","Insjön","SE",
+								"25464","Helsingborg","SE",
+								"54630","Karlsborg","SE",
+								"7227","Taulov","DK",
+								"0823","København","DK",
+								"20229","Malmö","SE",								
+							];
+		
+function showtrack()
+{
+		var str="";
+		var consignorcity="";
+		var consignments=[];
+		for(var i=0;i<trackdata.length;i++){
+				var shipments=trackdata[i].TrackingInformationResponse.shipments;
+				consignorcity="";	
+				consignorcountry="";
+				for(var j=0;j<shipments.length;j++){
+						var shipment=shipments[j];
+					
+						var consignmentobj={};
+						consignmentobj.company="Postnord";
+						consignmentobj.consignmentid=shipment.shipmentId;
+						consignmentobj.weight=shipment.assessedWeight.value;
+						consignmentobj.consignor={};
+						consignmentobj.consignor.name=shipment.consignor.name;
+						consignmentobj.consignor.postcode=shipment.consignor.address.postCode;
+						consignmentobj.service=shipment.service.name;
+						var post=postnummer.indexOf(shipment.consignor.address.postCode);
+
+						console.log(shipment.consignor);
+
+						if(post!=-1){
+								consignorcity=postnummer[post+1];
+								consignorcountry=postnummer[post+2];
+						}else{
+								
+						}
+						// console.log(consignorcity);
+						consignmentobj.consignor.city=consignorcity;
+				
+						consignmentobj.consignor.country=shipment.consignor.address.country;
+						
+						consignmentobj.consignor.city="";
+						consignmentobj.events=[];
+					
+						consignmentobj.colli=shipment.assessedNumberOfItems;
+						consignmentobj.measurements={};
+					
+						// Convert measurements
+						for(var k=0;k<shipment.items.length;k++){
+								var sitem=shipment.items[k];
+
+								if((typeof(sitem.statedMeasurement)=="undefined")){
+										consignmentobj.measurements.width=0;
+										consignmentobj.measurements.length=0;
+										consignmentobj.measurements.height=0;
+								}else{
+										if(typeof(sitem.statedMeasurement.width)=="undefined"){
+												consignmentobj.measurements.width=0;
+												consignmentobj.measurements.length=0;
+												consignmentobj.measurements.height=0;											
+										}else{
+												consignmentobj.measurements.width=sitem.statedMeasurement.width.value;
+												consignmentobj.measurements.length=sitem.statedMeasurement.length.value;
+												consignmentobj.measurements.height=sitem.statedMeasurement.height.value;
+										}
+								}
+								for(var l=0;l<sitem.events.length;l++){
+										var event=sitem.events[l];
+										eventobj={};
+									
+										eventobj.timestamp=event.eventTime;
+										eventobj.text=event.eventDescription;
+										eventobj.location=event.location.city;
+										eventobj.country=event.location.countryCode;									
+										eventobj.status=event.status;
+									
+										if(typeof event.location.city=="undefined" && event.status=="INFORMED"){
+												console.log(l,consignorcity,consignorcountry);
+												eventobj.location=consignorcity;
+												eventobj.country=consignorcountry;
+										}										
+									
+										consignmentobj.events.push(eventobj);
+								}
+						}
+					
+						consignments.push(consignmentobj);					
+
+				}
+		}
+		// console.log(JSON.stringify(consignments));
+		document.getElementById('outp').innerHTML=JSON.stringify(consignments);
+}
+
+</script>
+
+</head>
+<body onload='showtrack();'>
+
+	<div border=1 id='outp'>
+			
+	</div>
+	
+</body>

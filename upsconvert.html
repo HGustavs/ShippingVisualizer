@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+		<script src='data/ups.js'></script>	
+
+		<script>
+			
+var countries=[" Sweden","SE"," Germany","DE"];			
+
+function showtrack()
+{
+		var str="";
+		var consignments=[];
+		for(var i=0;i<trackdata.length;i++){
+				var shipments=trackdata[i].trackDetails;
+				for(var j=0;j<shipments.length;j++){
+						var shipment=shipments[j];
+
+						var consignmentobj={};
+						consignmentobj.company="UPS";
+						consignmentobj.consignmentid=shipment.trackingNumber;
+						consignmentobj.colli=1;
+						consignmentobj.weight=shipment.additionalInformation.weight;
+						consignmentobj.service=shipment.additionalInformation.serviceInformation.serviceName;
+					
+						consignmentobj.consignor={};
+						consignmentobj.measurements={};
+						consignmentobj.events=[];					
+
+						for(var l=0;l<shipment.shipmentProgressActivities.length;l++){
+								var event=shipment.shipmentProgressActivities[l];
+								eventobj={};
+							
+								console.log(event);
+
+								eventobj.timestamp=event.date+"T"+event.time;
+								eventobj.text=event.activityScan;
+							
+								locstr=event.location.split(",");
+							
+								eventobj.country=countries[countries.indexOf(locstr[1])+1];
+								eventobj.location=locstr[0];
+								eventobj.status=event.actCode;							
+								
+								console.log(locstr);
+							/*
+								eventobj.timestamp=event.dateIso;
+								eventobj.text=event.description;
+
+								var locstr=event.city.toLocaleLowerCase();
+								locstr=locstr.charAt(0).toLocaleUpperCase()+locstr.slice(1);
+								eventobj.location=locstr;
+								eventobj.status=event.status;
+								eventobj.postcode=event.postalCode;
+							*/
+								consignmentobj.events.push(eventobj);
+						}									
+
+						consignments.push(consignmentobj);					
+
+				}
+		}
+		// console.log(JSON.stringify(consignments));
+		document.getElementById('outp').innerHTML=JSON.stringify(consignments);
+}
+
+</script>
+
+</head>
+<body onload='showtrack();'>
+
+	<div border=1 id='outp'>
+			
+	</div>
+	
+</body>

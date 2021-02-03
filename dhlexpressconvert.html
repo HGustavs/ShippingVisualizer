@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+		<script src='data/dhlexpress.js'></script>	
+
+	<script>		
+
+var countries={sweden:"SE",denmark:"DK",germany:"DE","hong kong sar, china":"CN","japan":"JP"};
+
+function splitAt(str,list)
+{
+			for(var i=0;i<list.length;i++){
+					var lpos=str.lastIndexOf(list[i]);
+					if(lpos>-1){
+							return str.substr(0,lpos);		
+					}
+			}
+			return str;
+}
+
+function showtrack()
+{
+		console.log(trackdata);
+		var str="";
+		var consignments=[];
+		for(var i=0;i<trackdata.length;i++){
+				var shipments=trackdata[i].shipments;
+				for(var j=0;j<shipments.length;j++){
+						var shipment=shipments[j];
+					
+						var consignmentobj={};
+						consignmentobj.company="DHL Express";
+						consignmentobj.consignmentid=shipment.id;
+						consignmentobj.colli=shipment.details.totalNumberOfPieces;
+						consignmentobj.weight="";
+
+						consignmentobj.consignor={};
+						consignmentobj.consignor.name="Plaza Japan";
+						consignmentobj.consignor.postcode="2-1-2-7F Hiranomachi";
+						consignmentobj.consignor.country="Japan";					
+						consignmentobj.consignor.city="Chuou-ku, Osaka";					
+					
+						consignmentobj.events=[];
+				
+						for(var l=0;l<shipment.events.length;l++){
+								var event=shipment.events[l];
+								eventobj={};
+
+								eventobj.timestamp=event.timestamp;
+								var eventtxt=event.description;
+								eventtxt=splitAt(eventtxt,[" at "," in "," through "]);
+								eventobj.text=eventtxt;
+								var locstr=event.location.address.addressLocality;
+								locstr=locstr.toLocaleLowerCase();
+								locstr=locstr.charAt(0).toLocaleUpperCase()+locstr.slice(1);
+								var locpos=locstr.lastIndexOf("-");
+								if(locpos>-1){
+										eventobj.location=locstr.substr(0,locpos-1);
+										eventobj.country=countries[locstr.substr(locpos+2)];
+										
+								}else{
+										eventobj.location=locstr;
+										eventobj.country="SE";
+								}
+								eventobj.status="0";
+							
+								console.log(eventtxt,eventobj.location,eventobj.country);
+								
+								consignmentobj.events.push(eventobj);
+						}					
+					
+						consignments.push(consignmentobj);					
+
+				}
+		}
+		// console.log(JSON.stringify(consignments));
+		document.getElementById('outp').innerHTML=JSON.stringify(consignments);
+}
+
+</script>
+
+</head>
+<body onload='showtrack();'>
+
+	<div border=1 id='outp'>
+			
+	</div>
+	
+</body>

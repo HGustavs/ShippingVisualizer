@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+	
+	<script src="data/trackdata.js" charset="UTF-8"></script>
+	
+	<script>
+		
+		
+	
+// https://simplemaps.com/data/nl-cities	
+		
+locations=[];
+
+function highlightDay(day)
+{	
+		if(document.getElementById(day)!=null){
+				document.getElementById(day).style.border="1px solid red";
+				document.getElementById(day).style.background="#fed";	
+		}
+}
+		
+function dehighlightDay(day)
+{
+		if(document.getElementById(day)!=null){
+				document.getElementById(day).style.border="1px solid green";
+				document.getElementById(day).style.background="#dfd";	
+		}
+}
+
+function fixdate(str)
+{
+		str=str.replaceAll(" ","T");
+		str=str.replaceAll("/","-");
+		return new Date(str);
+}
+		
+function minicalendar(fromdate,todate,shipmentid)
+{
+		var startm=fromdate.getMonth();
+		var endm=todate.getMonth();
+		var startyear=fromdate.getFullYear();
+		var endyear=todate.getFullYear();
+		
+		var monthnames=["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+
+		var startmdate=new Date(startyear+"-"+(startm+1)+"-"+01);
+		var endmdate=new Date(endyear+"-"+(endm+1)+"-"+01);
+		var startdate=new Date(startyear+"-"+(startm+1)+"-"+fromdate.getDate());
+		var enddate=new Date(endyear+"-"+(endm+1)+"-"+todate.getDate());
+		endmdate.setMonth(endmdate.getMonth()+1);
+	
+		curr=new Date(startyear+"-"+(startm+1)+"-"+01);
+		
+		str="<div class='minical'>";
+		str+="<div class='week'><div class='month'>"+monthnames[curr.getMonth()]+" "+curr.getFullYear()+"</div></div>";
+		str+="<div class='week'>";
+		for(var i=0;i<startmdate.getDay()-1;i++){
+				str+="<span class='day'>&nbsp;</span>";
+		}
+
+		var i=0;
+		do{
+				if(curr.getDay()==1&&(i!=0)) str+="</div><div class='week'>";
+				if(curr>=startdate&&curr<=enddate){
+						str+="<span id='"+shipmentid+curr.toISOString().substr(0,10)+"' class='day ship'>"+(curr.getDate())+"</span>";
+				}else{
+						str+="<span class='day'>"+(curr.getDate())+"</span>";
+				}
+				curr.setDate(curr.getDate()+1);
+				if(i++>50) break;
+		}while(curr<endmdate);
+		str+="</div>";
+		str+="</div>";
+	
+		return str;
+}
+
+function showtrack()
+{
+	
+	// minicalendar(new Date("2020-12-05"),new Date("2020-12-09"));
+	for(var i=0;i<trackdata.length;i++){
+				var received=new Date("2020-01-01 12:00");
+				var sent=new Date("2030-01-01 12:00");
+				for(var j=0;j<trackdata[i].events.length;j++){
+						if(locations.indexOf(trackdata[i].events[j].location)!=-1) locations.push(trackdata[i].events[j].location);
+						var curr=fixdate(trackdata[i].events[j].timestamp);
+						trackdata[i].events[j].timestamp=curr;
+						if(curr<sent) sent=curr;
+						if(curr>received) received=curr;
+				}
+				trackdata[i].sent=sent;
+				trackdata[i].received=received;
+				trackdata[i].events.sort(function compare(a,b){return a.timestamp-b.timestamp});
+		}
+	
+		console.log(locations);
+	
+		trackdata.sort(function compare(a,b){return a.received-b.received});
+	
+		var str="";
+		for(var i=0;i<trackdata.length;i++){
+				str+="<tr>";
+				shipment=trackdata[i];
+				str+="<td>"+i+"</td>";			
+				str+="<td>"+shipment.company+"</td>";
+				str+="<td><a href='"+shipment.consignmentid+"'><img src='linkicon.svg' style='width:20px;'></a></td>";
+				str+="<td>"+shipment.consignor.name+"</td>";
+				str+="<td>"+minicalendar(shipment.sent,shipment.received,shipment.consignmentid)+"</td>";
+				str+="<td>";
+				str+="<table>";
+				for(var j=0;j<shipment.events.length;j++){
+						var event=shipment.events[j];
+						if(typeof event.timestamp!="undefined"){
+								var ttime=shipment.consignmentid+event.timestamp.toISOString();
+								ttime=ttime.substr(0,ttime.length-14);
+								str+="<tr onmouseover='highlightDay(\""+ttime+"\")' onmouseout='dehighlightDay(\""+ttime+"\")' >";
+						}else{
+								str+="<tr>";
+						}
+						str+="<td><span class='status'>"+event.text+"</span></td>";
+						if(locations.indexOf(event.location)==-1){
+									var cityindex=places.findIndex(i => i.name === event.location);
+									if(cityindex!=-1){
+											var city=places[cityindex];
+											p1=toxy(city.lat,city.lon);
+											var themap=document.getElementById("innerMap");
+											themap.innerHTML+="<circle id='pp' fill='#884422' stroke='#000000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round' cx='"+p1.x+"' cy='"+p1.y+"' r='2'/>";
+									}else if(event.location!=null&&event.location!=""){
+											console.log("Location not found: "+event.location);
+									}
+							
+						}
+						str+="<td>"+event.location+"</td>";
+						str+="</tr>";
+				}
+				str+="</table>";
+				str+="</td>";
+				str+="</tr>";
+		}
+		document.getElementById("outp").innerHTML=str;
+}
+
+function toxy(lat,lon)
+{
+	var pixPerLon = mapW / (maxLon - minLon);
+	var pixPerLat = mapH / (minLat - maxLat);
+
+	var x = ((lon-minLon) * pixPerLon);
+	var y = (minLat-lat) * pixPerLat;
+
+	return {x:x,y:y};		
+}
+
+function setup()
+{
+		var xhr = new XMLHttpRequest();
+		xhr.onload = function() {
+			document.getElementById('mapp').innerHTML=this.responseText;
+			showtrack();
+		}
+		xhr.open("GET", "maps/europe.svg");
+		xhr.responseType = "text";
+		xhr.send();
+}
+
+</script>
+		
+<style>
+	body{
+			font-family: "Arial Narrow";
+			font-size: 14px;
+	}
+	.month{
+			font-family: "Arial Narrow";
+			font-size: 12px;
+			font-weight: bold;
+			text-align:center;
+	}
+	
+	.week{
+			margin:2px;
+			width:168px;
+	}
+	
+	.day{
+		font-family: "Arial Narrow";
+		font-size: 10px;
+		text-align: center;
+		padding:4px;
+		width:14px;
+		display:inline-block;
+		border:1px solid white;
+		border-radius:3px;
+	}
+
+	.ship{
+		background:#dfd;
+		border:1px solid green;
+		border-radius:3px;
+	}	
+	
+	.minical{
+			border:1px solid red;
+			padding:2px;
+			margin:2px;
+			width:172px;
+	}
+	
+	.status{
+			width:200px;
+			white-space: nowrap;
+			overflow: hidden;
+			text-overflow: ellipsis;
+			display:inline-block;
+			margin:0px;
+			padding:0px;
+	}
+</style>
+
+</head>
+<body onload='setup();'>
+
+	<div id='mapp'></div>
+	
+	<div id="outpdiv"></div>
+	
+	<table border=1 id='outp'>
+			
+	</table>
+	
+</body>

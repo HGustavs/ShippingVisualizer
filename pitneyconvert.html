@@ -1,0 +1,74 @@
+<html>
+	<head>
+		<script src='data/pitney.js' ></script>	
+
+		<script>
+
+function showtrack()
+{
+		var str="";
+		var consignments=[];
+		for(var i=0;i<trackdata.length;i++){
+						var shipment=trackdata[i];							
+						
+						var consignmentobj={};
+						consignmentobj.company="Pitney Bowles";
+						consignmentobj.consignmentid=shipment.packageIdentifier;
+						consignmentobj.colli=1;
+						consignmentobj.weight=Math.round(shipment.weight*100*0.453592)/100;
+
+						consignmentobj.consignor={};
+						consignmentobj.consignor.name="";
+						consignmentobj.consignor.postcode=shipment.senderLocation.postalOrZipCode;
+						consignmentobj.consignor.country=shipment.senderLocation.country;					
+						consignmentobj.consignor.city=shipment.senderLocation.city;
+					
+						consignmentobj.measurements={};
+						consignmentobj.measurements.width=0;
+						consignmentobj.measurements.length=0;
+						consignmentobj.measurements.height=0;			
+						consignmentobj.events=[];
+
+						for(var l=0;l<shipment.scanHistory.scanDetails.length;l++){
+								var event=shipment.scanHistory.scanDetails[l];
+								console.log(event);
+								eventobj={};
+							
+								eventobj.status=event.packageStatus;
+								eventobj.text=event.eventDescription;		
+								eventobj.timestamp=event.eventDate+"T"+event.eventTime;
+								
+								var locstr=event.eventLocation.city;
+								if(typeof locstr!="undefined"){
+										locstr=locstr.toLocaleLowerCase();
+										locstr=locstr.charAt(0).toLocaleUpperCase()+locstr.slice(1);							
+								}
+								eventobj.location=locstr;
+
+								eventobj.postcode=event.eventLocation.postalOrZipCode;
+								eventobj.country=event.eventLocation.country;
+								if(eventobj.country==null) eventobj.country="US";
+								eventobj.state=event.eventLocation.countyOrRegion;
+								
+								eventobj.code=event.eventCode;
+							
+								if(event.eventCode!="CAR") consignmentobj.events.push(eventobj);
+						}		
+			
+				consignments.push(consignmentobj);	
+		}
+					
+		// console.log(JSON.stringify(consignments));
+		document.getElementById('outp').innerHTML=JSON.stringify(consignments);
+}
+
+</script>
+
+</head>
+<body onload='showtrack();'>
+
+	<div border=1 id='outp'>
+			
+	</div>
+	
+</body>

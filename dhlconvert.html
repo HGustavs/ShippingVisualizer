@@ -1,0 +1,96 @@
+<html>
+	<head>
+	
+	<script src="https://code.jquery.com/jquery-3.5.1.js" integrity="sha256-QWo7LDvxbWT2tbbQ97B53yJnYU3WhH/C8ycbRAkjPDc=" crossorigin="anonymous"></script>
+	
+	<script>
+		
+function getDHLData()
+{
+				var jqxhr = $.ajax( "dhldata2.xml", {
+						method:"POST",
+						data:{}
+				})
+				.done(resultXML)
+				.fail(errormsg)
+				.always(function() {
+				});
+}
+
+function errormsg()
+{
+		alert("Error!");
+}
+
+function resultXML(content)
+{
+		var resultset=content.childNodes[0];
+	
+		var consignmentobj={};
+		consignmentobj.company="DHL";
+
+		// Iterate over all nodes in root node (i.e. bookings)
+		for (i = 0; i < resultset.childNodes.length; i++) {
+				// Iterate over all child nodes of that node that are booking nodes
+				if(resultset.childNodes.item(i).nodeName=="consignment"){
+					// Retrieve first name and last name for node
+					var consignment=resultset.childNodes.item(i);
+					consignmentobj.measurements={width:0,length:0,height:0};
+					consignmentobj.consignor={};
+					consignmentobj.events=[];
+					consignmentobj.consignor.name="UNK";
+					for (j = 0; j < consignment.childNodes.length; j++) {
+							var item=consignment.childNodes.item(j);
+							if(item.nodeName=="consignmentId") consignmentobj.consignmentid=item.textContent;
+							if(item.nodeName=="colli") consignmentobj.colli=item.textContent;
+							if(item.nodeName=="weight") consignmentobj.weight=item.textContent;
+							if(item.nodeName=="volume") consignmentobj.volume=item.textContent;			
+							if(item.nodeName=="consignorCountry") consignmentobj.consignor.country=item.textContent;	
+							if(item.nodeName=="consignorCity") consignmentobj.consignor.city=item.textContent;	
+							if(item.nodeName=="statusHistory"){
+									var eventobj={};
+									var timestamp="";
+									for (k = 0; k < item.childNodes.length; k++) {
+											var status=item.childNodes.item(k);
+											if(status.nodeName=="statusDate") timestamp=status.textContent;
+										  if(status.nodeName=="statusTime") timestamp+=" "+status.textContent;
+											if(status.nodeName=="statusText") eventobj.text=status.textContent;
+											if(status.nodeName=="statusTerminal"){
+														var locstr=status.textContent;
+														var locpos=locstr.indexOf("-");
+														if(locpos>-1){
+																var country=locstr.substr(0,locpos);
+																locstr=locstr.substr(locpos+1);
+														}else{
+																var country="SE"
+														}
+														locstr=locstr.toLocaleLowerCase();
+														locstr=locstr.charAt(0).toLocaleUpperCase()+locstr.slice(1);												
+														console.log(locstr,country);
+														eventobj.location=locstr;
+														eventobj.country=country;
+											}
+											eventobj.status="_";
+									}
+									eventobj.timestamp=timestamp;
+									consignmentobj.events.push(eventobj);
+							}
+						
+					}
+
+
+				}
+		}
+		document.getElementById('outp').innerHTML=JSON.stringify(consignmentobj);
+}
+
+</script>
+
+</head>
+<body onload='getDHLData();'>
+
+	<div border=1 id='outp'>
+			
+	</div>
+	
+</body>
