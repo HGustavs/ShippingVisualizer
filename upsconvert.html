@@ -32,18 +32,29 @@ function showtrack()
 								var event=shipment.shipmentProgressActivities[l];
 								eventobj={};
 							
-								console.log(event);
-
-								eventobj.timestamp=event.date+"T"+event.time;
+								if(event.time.length<=4) event.time="0"+event.time;
+							
+								datestr=event.date.substr(6,4)+"-"+event.date.substr(3,2)+"-"+event.date.substr(0,2);
+						
+								eventobj.timestamp=datestr+"T"+event.time;
 								eventobj.text=event.activityScan;
 							
 								locstr=event.location.split(",");
 							
 								eventobj.country=countries[countries.indexOf(locstr[1])+1];
-								eventobj.location=locstr[0];
+								locstr=locstr[0];
+								spaceindex=locstr.indexOf(" ");
+								if(spaceindex==-1){
+										eventobj.location=locstr;
+										eventobj.airport="";
+								}else{
+										eventobj.location=locstr.substr(0,spaceindex);
+										eventobj.airport=locstr.substr(spaceindex+1);
+								}
 								eventobj.status=event.actCode;							
 								
-								console.log(locstr);
+//								console.log(locstr);
+							
 							/*
 								eventobj.timestamp=event.dateIso;
 								eventobj.text=event.description;

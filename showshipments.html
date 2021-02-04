@@ -33,6 +33,7 @@ function fixdate(str)
 {
 		str=str.replaceAll(" ","T");
 		str=str.replaceAll("/","-");
+	
 		return new Date(str);
 }
 		
@@ -96,8 +97,6 @@ function showtrack()
 				trackdata[i].events.sort(function compare(a,b){return a.timestamp-b.timestamp});
 		}
 	
-		console.log(locations);
-	
 		trackdata.sort(function compare(a,b){return a.received-b.received});
 	
 		var str="";
@@ -113,7 +112,7 @@ function showtrack()
 				str+="<table>";
 				for(var j=0;j<shipment.events.length;j++){
 						var event=shipment.events[j];
-						if(typeof event.timestamp!="undefined"){
+						if(typeof event.timestamp!="undefined"&&event.timestamp!=""){
 								var ttime=shipment.consignmentid+event.timestamp.toISOString();
 								ttime=ttime.substr(0,ttime.length-14);
 								str+="<tr onmouseover='highlightDay(\""+ttime+"\")' onmouseout='dehighlightDay(\""+ttime+"\")' >";
