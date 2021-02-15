@@ -42,29 +42,19 @@ function showtrack()
 								locstr=event.location.split(",");
 							
 								eventobj.country=countries[countries.indexOf(locstr[1])+1];
-								locstr=locstr[0];
+								locstr=locstr[0].toLocaleLowerCase();
 								spaceindex=locstr.indexOf(" ");
 								if(spaceindex==-1){
+										locstr=locstr.charAt(0).toLocaleUpperCase()+locstr.slice(1);
 										eventobj.location=locstr;
 										eventobj.airport="";
 								}else{
-										eventobj.location=locstr.substr(0,spaceindex);
+										ilocstr=locstr.substr(0,spaceindex)
+										eventobj.location=ilocstr.charAt(0).toLocaleUpperCase()+ilocstr.slice(1);;
 										eventobj.airport=locstr.substr(spaceindex+1);
 								}
 								eventobj.status=event.actCode;							
 								
-//								console.log(locstr);
-							
-							/*
-								eventobj.timestamp=event.dateIso;
-								eventobj.text=event.description;
-
-								var locstr=event.city.toLocaleLowerCase();
-								locstr=locstr.charAt(0).toLocaleUpperCase()+locstr.slice(1);
-								eventobj.location=locstr;
-								eventobj.status=event.status;
-								eventobj.postcode=event.postalCode;
-							*/
 								consignmentobj.events.push(eventobj);
 						}									
 
