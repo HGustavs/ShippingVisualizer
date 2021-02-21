@@ -83,6 +83,14 @@ function icon(name,id)
 		return "<a href='"+id+"'><img style='width:48px;' src='icons/"+name+"-icon.svg' /></a>";
 }
 
+function showline(inputid)
+{
+		console.log(document.getElementById("lin"+inputid).setAttribute('opacity',1.0));
+		
+		console.log(inputid);
+
+}
+
 function showtrack()
 {
 	
@@ -106,8 +114,9 @@ function showtrack()
 	
 		var str="";
 		for(var i=0;i<trackdata.length;i++){
-				str+="<tr>";
 				shipment=trackdata[i];
+			
+				str+="<tr onclick='showline(\""+shipment.consignmentid+"\")'>";
 				str+="<td>"+icon(shipment.company,shipment.consignmentid)+"</td>";			
 				str+="<td>"+shipment.consignor.name+"</td>";
 				str+="<td>"+minicalendar(shipment.sent,shipment.received,shipment.consignmentid)+"</td>";
@@ -139,9 +148,9 @@ function showtrack()
 											}													
 											p1=toxy(city.lat,city.lon);
 											var themap=document.getElementById("innerMap");
-											themap.innerHTML+="<circle id='pp' fill='#884422' stroke='#000000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round' cx='"+p1.x+"' cy='"+p1.y+"' r='2'/>";
+											lineobj+="<circle id='pp' fill='#884422' stroke-linecap='round' stroke-linejoin='round' cx='"+p1.x+"' cy='"+p1.y+"' r='2'/>";
 											if(old!=null){
-													lineobj+="<line id='pp' opacity='0.1' fill='#884422' stroke='#000000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round' x1='"+p1.x+"' y1='"+p1.y+"' x2='"+old.x+"' y2='"+old.y+"' r='2'/>";
+													lineobj+="<line id='pp' fill='#884422' stroke='#000000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round' x1='"+p1.x+"' y1='"+p1.y+"' x2='"+old.x+"' y2='"+old.y+"' r='2'/>";
 											}
 									}else if(event.location!=null&&event.location!=""){
 											console.log("Location not found: "+event.location);
@@ -153,7 +162,7 @@ function showtrack()
 			
 				// After all events have been proessed generate line object
 				if(lineobj!=""){
-						themap.innerHTML+="<g id='lin"+shipment.consignmentid+"'>"+lineobj+"</g>";
+						themap.innerHTML+="<g id='lin"+shipment.consignmentid+"' opacity='0.0' >"+lineobj+"</g>";
 				}			
 				str+="</table>";
 				str+="</td>";
